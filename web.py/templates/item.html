@@ -1,0 +1,92 @@
+{% extends "app_base.html" %}
+{% block content %}
+<h3> Item Details </h3> 
+<form method="POST" action="item" style="max-width:400px; width:100%">
+	{% if message is defined %}
+	<div class="alert alert-warning">{{ message }}</div>
+	{% endif %}
+	<div class="alert alert-info">Please Input Valid itemID</div>
+	<div class="form-group">
+	  <label for="itemID">Item ID</label>
+	  <input type="text" class="form-control" id="itemID" name="itemID" />
+	</div>
+	<div class="form-group"><input type="submit" value="Add bid" class="btn btn-primary"/></div>
+</form>
+</center>
+
+
+class item:
+    def GET(self):
+        return render_template ('item.html')
+    def POST(self):
+        post_params = web.input()
+        itemID = post_params['itemID']
+        result = sqlitedb.getItemById(itemID)
+        category = sqlitedb.getCategoryById(itemID)
+        bid = sqlitedb.getBidById(itemID)
+        status = sqlitedb.getStatusById(itemID)
+        auctionWinner = None
+	if (status == 'close'):
+	    auctionWinner = sqlitedb.auctionGetter(itemID)
+        return render_template('item.html', itemID = itemID, result = result, category = category, bid = bid, status = status, auctionWinner = auctionWinner)
+
+<h3>Result</h3>
+{% if itemID %}
+<div class="alert alert-success"> 
+<strong><li><span>ItemID: </span></li></strong>
+{{itemID}} </div>
+{% else %}
+<div class="alert alert-danger">Please enter itemID</div>
+{% endif %}
+
+{% if result %}
+<div class="alert alert-success">The details for the item is as following:</div>
+{% else %}
+<div class="alert alert-danger">Do not have such item</div>
+{% endif %}
+
+{% if category %}
+	<div class="alert alert-success">
+	<strong><li><span>Category names: </span></li></strong>
+	{% for c in category %}
+		<li><span>{{ c['Category']|e }}</span></li>
+	{% endfor %}
+	</div>
+{% else %}
+<div class="alert alert-danger">our item does not have any category</div>
+{% endif %}
+
+{% if bid %}
+	<div class="alert alert-success">
+	<strong><li><span>Bids details: </span></li></strong>
+	{% for c in bid %}
+		<strong><li><span>######################## </span></li></strong>
+		<li><span>bid's user name: </span></li>
+		{{c['UserID']}}
+		<li><span>bid's time: </span></li>
+                {{c['Time']}}
+		<li><span>bid's amount: </span></li>
+		{{c['Amount']}}
+                
+	{% endfor %}
+	</div>
+{% else %}
+<div class="alert alert-info">our item does not have any bid</div>
+{% endif %}
+
+<div class="alert alert-success">
+<strong><li><span>Status: </span></li></strong>
+{{status}}
+</div>
+
+{% if auctionWinner %}
+<div class="alert alert-success">
+<strong><li><span>AuctionWinner: </span></li></strong>
+{{auctionWinner['UserID']}}
+</div>
+{% else %}
+<div class="alert alert-info">No winner for the bid</div>
+{% endif %}
+
+
+{% endblock %}
